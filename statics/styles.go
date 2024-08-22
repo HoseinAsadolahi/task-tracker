@@ -9,8 +9,7 @@ var DashStyle = lipgloss.NewStyle().
 
 var IdStyle = lipgloss.NewStyle().
 	Bold(true).
-	Foreground(lipgloss.Color("#DC143C")).
-	Margin(0, 0, 0, 8)
+	Foreground(lipgloss.Color("#DC143C"))
 
 var ContentStyle = lipgloss.NewStyle().
 	Bold(true).

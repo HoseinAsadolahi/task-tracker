@@ -8,6 +8,8 @@ import (
 	"github.com/HoseinAsadolahi/task-tracker/statics"
 	"os"
 	"path"
+	"strconv"
+	"time"
 )
 
 func getFilePath() string {
@@ -67,6 +69,9 @@ func readTasks(file *os.File) ([]model.Task, error) {
 	var tasks []model.Task
 	err := json.NewDecoder(file).Decode(&tasks)
 	if err != nil {
+		if err.Error() == "EOF" {
+			return tasks, nil
+		}
 		return nil, err
 	}
 	return tasks, nil
@@ -80,11 +85,19 @@ func AddTask(desc string) {
 	if utils.CheckError(err, "Can't read the file!") {
 		os.Exit(1)
 	}
-	task := model.NewTask(utils.IfThenElse(len(tasks) == 0, 1, tasks[len(tasks)-1].Id+1).(int), desc)
+	var id int
+	if len(tasks) == 0 {
+		id = 1
+	} else {
+		id = tasks[len(tasks)-1].Id + 1
+	}
+	task := model.NewTask(id, desc)
 	tasks = append(tasks, *task)
 	setOriginToZero(file)
 	err = json.NewEncoder(file).Encode(tasks)
 	utils.CheckError(err, "Can't write into the file!")
+	fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task added successfully (Id: %s)!",
+		statics.IdStyle.Render(strconv.Itoa(task.Id)))))
 }
 
 func DeleteTask(id int) {
@@ -106,7 +119,8 @@ func DeleteTask(id int) {
 			if utils.CheckError(err, "Can't write into the file!") {
 				os.Exit(1)
 			}
-			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%d deleted", id)))
+			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%s",
+				statics.IdStyle.Render(strconv.Itoa(id)))) + statics.InfoStyle.Render(" deleted"))
 			return
 		}
 	}
@@ -131,14 +145,52 @@ func UpdateTask(id int, desc, status string) {
 			} else {
 				tasks[i].Status = status
 			}
+			tasks[i].UpdatedAt = time.Now()
 			setOriginToZero(file)
 			err = json.NewEncoder(file).Encode(tasks)
 			if utils.CheckError(err, "Can't write into the file!") {
 				os.Exit(1)
 			}
-			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%d updated", id)))
+			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%s updated",
+				statics.IdStyle.Render(strconv.Itoa(id)))))
 			return
 		}
 	}
 	fmt.Println(statics.WarningStyle.Render("Task Not Found!"))
+}
+
+func ListTasksByStatus(status string) {
+	if !exists() {
+		fmt.Println(statics.WarningStyle.Render("No task Found!"))
+		return
+	}
+	file := open()
+	defer closeFile(file)
+	tasks, err := readTasks(file)
+	if utils.CheckError(err, "Can't read the file!") {
+		os.Exit(1)
+	}
+	for _, task := range tasks {
+		if task.Status == status {
+			fmt.Println(statics.IdStyle.Render(strconv.Itoa(task.Id)) + ": " +
+				statics.ContentStyle.Render(task.Description))
+		}
+	}
+}
+
+func ListAllTasks() {
+	if !exists() {
+		fmt.Println(statics.WarningStyle.Render("No task Found!"))
+		return
+	}
+	file := open()
+	defer closeFile(file)
+	tasks, err := readTasks(file)
+	if utils.CheckError(err, "Can't read the file!") {
+		os.Exit(1)
+	}
+	for _, task := range tasks {
+		fmt.Println(statics.IdStyle.Render(strconv.Itoa(task.Id)) + ": " +
+			statics.ContentStyle.Render(task.Description))
+	}
 }

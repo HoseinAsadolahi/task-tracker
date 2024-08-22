@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "github.com/HoseinAsadolahi/task-tracker/cmd"
 
+func main() {
+	cmd.Execute()
 }
