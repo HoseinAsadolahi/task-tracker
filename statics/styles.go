@@ -24,3 +24,8 @@ var ErrorStyle = lipgloss.NewStyle().
 	Bold(true).
 	Italic(true).
 	Foreground(lipgloss.Color("#FF0000"))
+
+var WarningStyle = lipgloss.NewStyle().
+	Bold(true).
+	Italic(true).
+	Foreground(lipgloss.Color("#FA8072"))
