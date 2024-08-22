@@ -18,6 +18,17 @@ func getFilePath() string {
 	return path.Join(wd, "tasks.json")
 }
 
+func setOriginToZero(file *os.File) {
+	err := file.Truncate(0)
+	if utils.CheckError(err, "Can't truncate the file!") {
+		os.Exit(1)
+	}
+	_, err = file.Seek(0, 0)
+	if utils.CheckError(err, "Can't set the pointer to the beginning of the file!") {
+		os.Exit(1)
+	}
+}
+
 func exists() bool {
 	filePath := getFilePath()
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -71,20 +82,63 @@ func AddTask(desc string) {
 	}
 	task := model.NewTask(utils.IfThenElse(len(tasks) == 0, 1, tasks[len(tasks)-1].Id+1).(int), desc)
 	tasks = append(tasks, *task)
-	err = file.Truncate(0)
-	if utils.CheckError(err, "Can't truncate the file!") {
-		os.Exit(1)
-	}
-	_, err = file.Seek(0, 0)
-	if utils.CheckError(err, "Can't set the pointer to the beginning of the file!") {
-		os.Exit(1)
-	}
+	setOriginToZero(file)
 	err = json.NewEncoder(file).Encode(tasks)
 	utils.CheckError(err, "Can't write into the file!")
 }
 
 func DeleteTask(id int) {
 	if !exists() {
-		fmt.Println(statics.InfoStyle.Render("Task Not Found!"))
+		fmt.Println(statics.WarningStyle.Render("Task Not Found!"))
+		return
 	}
+	file := open()
+	defer closeFile(file)
+	tasks, err := readTasks(file)
+	if utils.CheckError(err, "Can't read the file!") {
+		os.Exit(1)
+	}
+	for i, task := range tasks {
+		if task.Id == id {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			setOriginToZero(file)
+			err = json.NewEncoder(file).Encode(tasks)
+			if utils.CheckError(err, "Can't write into the file!") {
+				os.Exit(1)
+			}
+			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%d deleted", id)))
+			return
+		}
+	}
+	fmt.Println(statics.WarningStyle.Render("Task Not Found!"))
+}
+
+func UpdateTask(id int, desc, status string) {
+	if !exists() {
+		fmt.Println(statics.WarningStyle.Render("Task Not Found!"))
+		return
+	}
+	file := open()
+	defer closeFile(file)
+	tasks, err := readTasks(file)
+	if utils.CheckError(err, "Can't read the file!") {
+		os.Exit(1)
+	}
+	for i, task := range tasks {
+		if task.Id == id {
+			if desc != "" {
+				tasks[i].Description = desc
+			} else {
+				tasks[i].Status = status
+			}
+			setOriginToZero(file)
+			err = json.NewEncoder(file).Encode(tasks)
+			if utils.CheckError(err, "Can't write into the file!") {
+				os.Exit(1)
+			}
+			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%d updated", id)))
+			return
+		}
+	}
+	fmt.Println(statics.WarningStyle.Render("Task Not Found!"))
 }
