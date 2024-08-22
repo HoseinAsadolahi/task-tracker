@@ -20,6 +20,11 @@ you can also see the list of done, todo or in progress tasks.`,
 func init() {
 	rootCmd.AddCommand(addCmd)
 	rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(todoCmd)
+	rootCmd.AddCommand(inProgressCmd)
+	rootCmd.AddCommand(doneCmd)
+	rootCmd.AddCommand(listCmd)
 }
 
 func Execute() {

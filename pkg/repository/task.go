@@ -151,8 +151,8 @@ func UpdateTask(id int, desc, status string) {
 			if utils.CheckError(err, "Can't write into the file!") {
 				os.Exit(1)
 			}
-			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%s updated",
-				statics.IdStyle.Render(strconv.Itoa(id)))))
+			fmt.Println(statics.InfoStyle.Render(fmt.Sprintf("Task:%s",
+				statics.IdStyle.Render(strconv.Itoa(id)))) + statics.InfoStyle.Render(" updated"))
 			return
 		}
 	}
@@ -170,11 +170,18 @@ func ListTasksByStatus(status string) {
 	if utils.CheckError(err, "Can't read the file!") {
 		os.Exit(1)
 	}
+	var found bool
 	for _, task := range tasks {
 		if task.Status == status {
 			fmt.Println(statics.IdStyle.Render(strconv.Itoa(task.Id)) + ": " +
-				statics.ContentStyle.Render(task.Description))
+				statics.ContentStyle.Render("\""+task.Description+"\" created at: "+
+					task.CreatedAt.Format("2006-01-02 15:04")+" updated at: "+
+					task.UpdatedAt.Format("2006-01-02 15:04")))
+			found = true
 		}
+	}
+	if !found {
+		fmt.Println(statics.WarningStyle.Render("No task Found!"))
 	}
 }
 
@@ -189,8 +196,13 @@ func ListAllTasks() {
 	if utils.CheckError(err, "Can't read the file!") {
 		os.Exit(1)
 	}
+	if len(tasks) == 0 {
+		fmt.Println(statics.WarningStyle.Render("No task Found!"))
+		return
+	}
 	for _, task := range tasks {
 		fmt.Println(statics.IdStyle.Render(strconv.Itoa(task.Id)) + ": " +
-			statics.ContentStyle.Render(task.Description))
+			statics.ContentStyle.Render("\""+task.Description+"\" created at: "+task.CreatedAt.Format("2006-01-02 15:04")+
+				" updated at: "+task.UpdatedAt.Format("2006-01-02 15:04")))
 	}
 }
