@@ -17,6 +17,11 @@ you can also see the list of done, todo or in progress tasks.`,
 	Run: func(cmd *cobra.Command, args []string) {},
 }
 
+func init() {
+	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(deleteCmd)
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(statics.ErrorStyle.Render(err.Error()))
